@@ -1,0 +1,4 @@
+# GIT will ignore the following files when adding and committing
+
+# We want to ignore all files associated with the Intellij IDE
+.idea
