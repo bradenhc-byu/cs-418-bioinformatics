@@ -1,5 +1,4 @@
 import os.path
-from collections import defaultdict
 
 
 class Dataset:

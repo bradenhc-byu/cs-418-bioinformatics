@@ -26,4 +26,4 @@ data = Dataset()
 data.populate("./dataset.txt")
 if data.loaded:
     l = get_limb_length(data.j_row, data.distance_matrix)
-    print(l)
+    print l
