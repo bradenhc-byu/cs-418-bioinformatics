@@ -45,6 +45,10 @@ class Node:
         else:
             return None
 
+    def remove_child(self, index):
+        if index > 0 and index < len(self.__children):
+            self.__children.pop(index)
+
     def __str__(self):
         out_string = ""
         for child in self.__children:
