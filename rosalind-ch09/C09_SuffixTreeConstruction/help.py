@@ -1,13 +1,16 @@
-#!/usr/bin/env python
 '''
-A solution to a code challenges that accompanies Bioinformatics Algorithms: An Active-Learning Approach by Phillip Compeau & Pavel Pevzner.
-The textbook is hosted on Stepic and the problem is listed on ROSALIND under the Textbook Track.
+A solution to a code challenges that accompanies Bioinformatics Algorithms:
+An Active-Learning Approach by Phillip Compeau & Pavel Pevzner.
+The textbook is hosted on Stepic and the problem is listed on ROSALIND under
+the Textbook Track.
+
 Problem Title: Suffix Tree Construction Problem
 Rosalind ID: 7D
 URL: http://rosalind.info/problems/7d/
 '''
 
-'''A Rosalind bioinformatics script containing a generalized suffix tree data structure class.'''
+'''A Rosalind bioinformatics script containing a generalized suffix tree 
+data structure class.'''
 
 
 class Node(object):
@@ -73,25 +76,32 @@ class GeneralizedSuffixTree(object):
     def _add_word(self, current_word):
         """Adds a word to the generalized suffix tree."""
 
-        # Add the properly indexed out of alphabet character to the current word, and add it to the word list and root node.
-        # These need to be distinct (i.e. $0, $1, ..., $N), to distinguish between multiple words in the tree.
-        current_word = current_word + ['', '$'][current_word[-1] != '$'] + str(len(self._word_list))
+        # Add the properly indexed out of alphabet character to the current
+        # word, and add it to the word list and root node.
+        # These need to be distinct (i.e. $0, $1, ..., $N), to distinguish
+        # between multiple words in the tree.
+        current_word = current_word + ['', '$'][current_word[-1] != '$'] + \
+                       str(len(self._word_list))
         self._word_list.append(current_word)
 
         # Add each suffix to the generalized suffix tree.
         for i in xrange(current_word.index('$')+1):
             # Get the insertion point and associated suffix.
-            insertion_suffix, insertion_parent = self._insert_node(current_word[i:])
+            insertion_suffix, insertion_parent = \
+                self._insert_node(current_word[i:])
 
             # Create the new node, and add it as a child to its parent node.
             self._nodes.append(Node(insertion_parent, {len(self._word_list)-1}))
             self._nodes[insertion_parent]._children.append(len(self._nodes)-1)
 
             # Create the edge associated to with the new node.
-            self._edges[insertion_parent, len(self._nodes)-1] = Edge(len(self._word_list)-1, len(current_word)-len(insertion_suffix), len(current_word))
+            self._edges[insertion_parent, len(self._nodes)-1] = \
+                Edge(len(self._word_list)-1, len(current_word)-
+                     len(insertion_suffix), len(current_word))
 
     def _insert_node(self, suffix, current_node=0):
-        """Traverses the tree to determine the insertion point of the given suffix."""
+        """Traverses the tree to determine the insertion point of the given
+        suffix."""
 
         # Mark the word we're adding as traversing through the current node.
         self._nodes[current_node]._words.add(len(self._word_list)-1)
@@ -100,16 +110,19 @@ class GeneralizedSuffixTree(object):
         if suffix[0] == '$':
             return suffix, current_node
 
-        # Check all childen nodes to determine if we can traverse further down the tree.
+        # Check all childen nodes to determine if we can traverse further down
+        # the tree.
         for child_num in self._nodes[current_node]._children:
             e = self._edges[current_node, child_num]
             e_substring = self.edge_substring(e)
 
-            # If the entire edge appears as a prefix of the suffix, move to the child node and traverse further down the tree.
+            # If the entire edge appears as a prefix of the suffix, move to the
+            # child node and traverse further down the tree.
             if suffix[:len(e_substring)] == e_substring:
                 return self._insert_node(suffix[len(e_substring):], child_num)
 
-            # If the edge partially overlaps in prefix of the current suffix, split the edge and insert at the split.
+            # If the edge partially overlaps in prefix of the current suffix,
+            # split the edge and insert at the split.
             elif suffix[0] == e_substring[0]:
                 # Determine how many charaters overlap.
                 i = 0
@@ -123,16 +136,20 @@ class GeneralizedSuffixTree(object):
 
     def _split_edge(self, parent_num, child_num, split_pos):
         """
-        Splits the edge between the given parent and child nodes at the given split position.
-        Inserts a new node at the split position and returns the index of the new node.
+        Splits the edge between the given parent and child nodes at the given
+        split position. Inserts a new node at the split position and returns
+        the index of the new node.
         """
 
         # Create the new node.
         new_node = len(self._nodes)
-        self._nodes.append(Node(parent_num, words={len(self._word_list)-1} | self._nodes[child_num]._words))
+        self._nodes.append(Node(parent_num,
+                                words={len(self._word_list)-1} |
+                                      self._nodes[child_num]._words))
         self._nodes[new_node]._children.append(child_num)
 
-        # Add new_node as a child of parent_num.  Remove child_num from children list.
+        # Add new_node as a child of parent_num.  Remove child_num from
+        # children list.
         self._nodes[parent_num]._children.append(new_node)
         self._nodes[parent_num]._children.remove(child_num)
 
@@ -141,8 +158,14 @@ class GeneralizedSuffixTree(object):
 
         # Create the new edges.
         old_edge = self._edges[parent_num, child_num]
-        self._edges[parent_num, new_node] = Edge(old_edge._word, old_edge._start_index, old_edge._start_index + split_pos)
-        self._edges[new_node, child_num] = Edge(old_edge._word, old_edge._start_index + split_pos, old_edge._stop_index)
+        self._edges[parent_num, new_node] = Edge(old_edge._word,
+                                                 old_edge._start_index,
+                                                 old_edge._start_index +
+                                                 split_pos)
+        self._edges[new_node, child_num] = Edge(old_edge._word,
+                                                old_edge._start_index +
+                                                split_pos,
+                                                old_edge._stop_index)
 
         # Remove the old edge.
         del self._edges[parent_num, child_num]
@@ -157,8 +180,10 @@ class GeneralizedSuffixTree(object):
         """Returns the substring associated with a traversal to the given node."""
         node_word = ''
         while self._nodes[node_num]._parent != -1:
-            # Prepend the substring associated with each edge until we hit the root of the generalized suffix tree.
-            node_word = self.edge_substring(self._edges[self._nodes[node_num]._parent, node_num]) + node_word
+            # Prepend the substring associated with each edge until we hit the
+            # root of the generalized suffix tree.
+            node_word = self.edge_substring(self._edges[self._nodes[node_num]
+                                            ._parent, node_num]) + node_word
             node_num = self._nodes[node_num]._parent
 
         return node_word
@@ -173,31 +198,40 @@ class GeneralizedSuffixTree(object):
         if node_num == 0:
             return 0
 
-        # The first edge (working backwards) is the only one that can have an out of alphabet character, so take extra precaution.
-        first_edge = self.edge_substring(self._edges[self._nodes[node_num]._parent, node_num])
-        depth = len(first_edge) if '$' not in first_edge else len(first_edge[:first_edge.index('$')])
+        # The first edge (working backwards) is the only one that can have an
+        # out of alphabet character, so take extra precaution.
+        first_edge = self.edge_substring(self._edges[self._nodes[node_num].
+                                         _parent, node_num])
+        depth = len(first_edge) if '$' not in first_edge else \
+            len(first_edge[:first_edge.index('$')])
 
-        # Move to the parent node and add the length of the next edge until we hit the root.
+        # Move to the parent node and add the length of the next edge until
+        # we hit the root.
         node_num = self._nodes[node_num]._parent
         while self._nodes[node_num]._parent != -1:
-            # Prepend the substring associated with each edge until we hit the root of the generalized suffix tree.
-            depth += len(self.edge_substring(self._edges[self._nodes[node_num]._parent, node_num]))
+            # Prepend the substring associated with each edge until we hit the
+            # root of the generalized suffix tree.
+            depth += len(self.edge_substring(self._edges[self._nodes[node_num]
+                                             ._parent, node_num]))
             node_num = self._nodes[node_num]._parent
 
         return depth
 
 
 def suffix_tree_edges(word):
-    '''Returns the edge subsrings associated with the suffix tree for the given word.'''
-    # Most of the work is done by the generalized suffix tree script (see scripts folder).
+    '''Returns the edge subsrings associated with the suffix tree for
+    the given word.'''
+    # Most of the work is done by the generalized suffix tree script
+    # (see scripts folder).
     gst = GeneralizedSuffixTree(word)
 
     # Get a list of all edge substrings from the generalized suffix tree.
     edges = [gst.edge_substring(e) for e in gst.edges.values()]
 
     # Return the edges in suffix tree format (i.e. want endings $0 to be $).
-    # Note: This is necessary because we're using a generalized suffix tree, which uses $0, $1, ..., $N
-    # as the out of alphabet suffixes in order to distinguish between word 0, word 1, ..., word N.
+    # Note: This is necessary because we're using a generalized suffix tree,
+    # which uses $0, $1, ..., $N  as the out of alphabet suffixes in order to
+    #  distinguish between word 0, word 1, ..., word N.
     return [e[:-1] if '$' in e else e for e in edges]
 
 
@@ -214,6 +248,7 @@ def main():
     print '\n'.join(edges)
     with open('./output.txt', 'w') as output_data:
         output_data.write('\n'.join(edges))
+
 
 if __name__ == '__main__':
     main()
