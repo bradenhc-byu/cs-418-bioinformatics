@@ -165,20 +165,21 @@ class SuffixTree(object):
     accordingly"""
 
     def __init__(self, text):
+        if text.find("$") == -1:
+            text += "$"
         words = []
         for i in range(len(text)):
             words.append(text[i:])
-        self.__trie = Trie()#Trie(words)
+        self.__trie = Trie()
         self.populate(words)
-        #self.compress_to_tree()
 
     def populate(self, words):
 
         def recursive_add(node, remainder):
-            substring = remainder[0]
             split = False
             found = False
             for edge in node.edges():
+                substring = remainder[0]
                 if edge.value().startswith(substring):
                     found = True
                     i = 0
@@ -202,6 +203,7 @@ class SuffixTree(object):
                         break
                     if len(word) > len(edge.value()):
                         recursive_add(edge.dest_node(), remainder[i:])
+                        break
 
             if not found:
                 new_edge = Edge()
@@ -211,10 +213,10 @@ class SuffixTree(object):
                 node.add_edge(new_edge)
 
         for word in words:
-            root_substring = word[0]
             root_split = False
             root_found = False
             for root_edge in self.__trie.root().edges():
+                root_substring = word[0]
                 if root_edge.value().startswith(root_substring):
                     root_found = True
                     root_i = 0
@@ -240,6 +242,7 @@ class SuffixTree(object):
                         if root_i == 0:
                             root_i += 1
                         recursive_add(root_edge.dest_node(), word[root_i:])
+                        break
 
             if not root_found:
                 new_root_edge = Edge()
@@ -292,6 +295,25 @@ class SuffixTree(object):
         to_list(self.__trie.root(), suffix_list)
         return suffix_list
 
+    def get_substrings(self):
+
+        def to_list(node, substring_list, stack):
+            found = False
+            for edge in node.edges():
+                if edge.value().find("$") != -1:
+                    if stack and not found:
+                        substring_list.append(''.join(stack))
+                        found = True
+                else:
+                    stack.append(edge.value())
+                    to_list(edge.dest_node(), substring_list, stack)
+                    stack.pop()
+
+        sub_list = []
+        s = []
+        to_list(self.__trie.root(), sub_list, s)
+        return sub_list
+
 
 ################################################################################
 # UNIT TESTING
@@ -303,7 +325,7 @@ def main():
     #trie = Trie(words)
     #print trie.to_string()
 
-    text = "ATAAATG$"
+    text = "panamabananas"
 
     stree = SuffixTree(text)
     for suffix in stree.get_edges_as_list():
