@@ -28,6 +28,9 @@ class SuffixArray(object):
     def get_suffixes(self):
         return [suffix for index, suffix in self.__suffixes]
 
+    def get_values(self):
+        return self.__suffixes
+
     def find(self, pattern, first=False):
         matching_indices = []
         for index, suffix in self.__suffixes:
